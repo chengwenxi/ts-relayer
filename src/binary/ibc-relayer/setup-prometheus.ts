@@ -15,12 +15,38 @@ function getMetrics() {
       name: withPrefix('loop_total'),
       help: 'Total relayer loops.',
     }),
+    pendingPacketsSrc: new client.Gauge({
+      name: withPrefix('pending_packets_src'),
+      help: 'Total pending packages on source chain.',
+    }),
+    pendingPacketsDest: new client.Gauge({
+      name: withPrefix('pending_packets_dest'),
+      help: 'Total pending packages on destination chain.',
+    }),
+    errTxsTotal: new client.Counter({
+      name: withPrefix('err_txs_total'),
+      help: 'Total error on sending transaction.',
+    }),
+    balancesSrc: new client.Gauge({
+      name: withPrefix('balances_src'),
+      help: 'Balances on source chain.',
+    }),
+    balancesDest: new client.Gauge({
+      name: withPrefix('balances_dest'),
+      help: 'Balances on destination chain.',
+    }),
   };
 }
 
 export type Metrics = {
   loopTotal: client.Counter<string>;
+  pendingPacketsSrc: client.Gauge<string>;
+  pendingPacketsDest: client.Gauge<string>;
+  errTxsTotal: client.Counter<string>;
+  balancesSrc: client.Gauge<string>;
+  balancesDest: client.Gauge<string>;
 } | null;
+
 export function setupPrometheus({
   enabled,
   port,

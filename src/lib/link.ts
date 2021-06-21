@@ -2,6 +2,7 @@ import { arrayContentEquals } from '@cosmjs/utils';
 
 import { Order, Packet, State } from '../codec/ibc/core/channel/v1/channel';
 import { Height } from '../codec/ibc/core/client/v1/client';
+import { Metrics } from '../binary/ibc-relayer/setup-prometheus';
 
 import {
   AckWithMetadata,
@@ -62,6 +63,14 @@ export class Link {
 
   private readonly chainA: string;
   private readonly chainB: string;
+
+  public metrics: Metrics;
+
+  public async setMetrics(
+    metrics: Metrics,
+  ): Promise<void> {
+    this.metrics = metrics
+  }
 
   private chain(side: Side): string {
     if (side === 'A') {
@@ -289,6 +298,7 @@ export class Link {
     this.logger = logger ?? new NoopLogger();
     this.chainA = endA.client.chainId;
     this.chainB = endB.client.chainId;
+    this.metrics = null;
   }
 
   /**
@@ -479,6 +489,11 @@ export class Link {
       this.getPendingPackets('A', { minHeight: relayFrom.packetHeightA }),
       this.getPendingPackets('B', { minHeight: relayFrom.packetHeightB }),
     ]);
+
+    if (this.metrics != null) {
+      this.metrics?.pendingPacketsSrc.set(packetsA.length)
+      this.metrics?.pendingPacketsDest.set(packetsB.length)
+    }
 
     const cutoffHeightA = await this.endB.client.timeoutHeight(
       timedoutThresholdBlocks
@@ -700,6 +715,8 @@ export class Link {
       proofs,
       headerHeight
     );
+
+    
     const acks = parseAcksFromLogs(logs);
     return acks.map((ack) => ({ height, ...ack }));
   }

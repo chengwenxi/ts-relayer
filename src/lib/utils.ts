@@ -18,6 +18,15 @@ import {
 import { PublicKey as ProtoPubKey } from '../codec/tendermint/crypto/keys';
 
 import { PacketWithMetadata } from './endpoint';
+import { Metrics } from '../binary/ibc-relayer/setup-prometheus';
+
+let metrics: Metrics;
+
+export function setMetrics(
+  ms: Metrics
+){
+  metrics = ms
+}
 
 export interface Ack {
   readonly acknowledgement: Uint8Array;
@@ -27,6 +36,9 @@ export interface Ack {
 export function createBroadcastTxErrorMessage(
   result: BroadcastTxFailure
 ): string {
+  if (metrics != null) {
+    metrics?.errTxsTotal.inc(1)
+  }
   return `Error when broadcasting tx ${result.transactionHash} at height ${result.height}. Code: ${result.code}; Raw log: ${result.rawLog}`;
 }
 
@@ -360,13 +372,13 @@ export function splitPendingPackets(
         timeGreater(packet.packet.timeoutTimestamp, currentTime);
       return validPacket
         ? {
-            ...acc,
-            toSubmit: [...acc.toSubmit, packet],
-          }
+          ...acc,
+          toSubmit: [...acc.toSubmit, packet],
+        }
         : {
-            ...acc,
-            toTimeout: [...acc.toTimeout, packet],
-          };
+          ...acc,
+          toTimeout: [...acc.toTimeout, packet],
+        };
     },
     {
       toSubmit: [] as readonly PacketWithMetadata[],

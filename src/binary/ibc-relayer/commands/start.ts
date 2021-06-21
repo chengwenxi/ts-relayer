@@ -17,6 +17,7 @@ import { resolveKeyFileOption } from '../../utils/options/shared/resolve-key-fil
 import { resolveMnemonicOption } from '../../utils/options/shared/resolve-mnemonic-option';
 import { signingClient } from '../../utils/signing-client';
 import { Metrics, setupPrometheus } from '../setup-prometheus';
+import { setMetrics } from '../../../lib/utils';
 
 type ResolveHeightsParams = {
   scanFromSrc: number | null;
@@ -267,8 +268,16 @@ async function relayerLoop(
   );
 
   const done = false;
+  link.setMetrics(metrics)
+  setMetrics(metrics)
   while (!done) {
     try {
+      const coinA = await link.endA.client.query.bank.balance(link.endA.client.senderAddress,link.endA.client.fees.initClient.amount[0].denom)
+      const coinB = await link.endB.client.query.bank.balance(link.endB.client.senderAddress,link.endB.client.fees.initClient.amount[0].denom)
+
+      metrics?.balancesSrc.set(parseFloat(coinA.amount))
+      metrics?.balancesDest.set(parseFloat(coinB.amount))
+
       // TODO: make timeout windows more configurable
       nextRelay = await link.checkAndRelayPacketsAndAcks(nextRelay, 2, 6);
 
