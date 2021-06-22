@@ -30,10 +30,20 @@ function getMetrics() {
     balancesSrc: new client.Gauge({
       name: withPrefix('balances_src'),
       help: 'Balances on source chain.',
+      labelNames: ['addr'],
     }),
     balancesDest: new client.Gauge({
       name: withPrefix('balances_dest'),
       help: 'Balances on destination chain.',
+      labelNames: ['addr'],
+    }),
+    updateClientTotalSrc: new client.Counter({
+      name: withPrefix('update_client_total_src'),
+      help: 'Total successful client updates on source chain.',
+    }),
+    updateClientTotalDest: new client.Counter({
+      name: withPrefix('update_client_total_dest'),
+      help: 'Total successful client updates on destination chain.',
     }),
   };
 }
@@ -45,6 +55,8 @@ export type Metrics = {
   errTxsTotal: client.Counter<string>;
   balancesSrc: client.Gauge<string>;
   balancesDest: client.Gauge<string>;
+  updateClientTotalSrc: client.Counter<string>;
+  updateClientTotalDest: client.Counter<string>;
 } | null;
 
 export function setupPrometheus({

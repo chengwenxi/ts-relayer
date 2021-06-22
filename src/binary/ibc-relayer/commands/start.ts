@@ -272,11 +272,11 @@ async function relayerLoop(
   setMetrics(metrics)
   while (!done) {
     try {
-      const coinA = await link.endA.client.query.bank.balance(link.endA.client.senderAddress,link.endA.client.fees.initClient.amount[0].denom)
-      const coinB = await link.endB.client.query.bank.balance(link.endB.client.senderAddress,link.endB.client.fees.initClient.amount[0].denom)
+      const coinA = await link.endA.client.query.bank.balance(link.endA.client.senderAddress, link.endA.client.fees.initClient.amount[0].denom)
+      const coinB = await link.endB.client.query.bank.balance(link.endB.client.senderAddress, link.endB.client.fees.initClient.amount[0].denom)
 
-      metrics?.balancesSrc.set(parseFloat(coinA.amount))
-      metrics?.balancesDest.set(parseFloat(coinB.amount))
+      metrics?.balancesSrc.set({ "addr": link.endA.client.senderAddress }, parseFloat(coinA.amount))
+      metrics?.balancesDest.set({ "addr": link.endB.client.senderAddress }, parseFloat(coinB.amount))
 
       // TODO: make timeout windows more configurable
       nextRelay = await link.checkAndRelayPacketsAndAcks(nextRelay, 2, 6);

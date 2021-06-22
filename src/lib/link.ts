@@ -314,6 +314,14 @@ export class Link {
     this.logger.info(`Update Client on ${this.otherChain(sender)}`);
     const { src, dest } = this.getEnds(sender);
     const height = await dest.client.doUpdateClient(dest.clientID, src.client);
+    if (this.metrics != null) {
+      if (sender == 'A') {
+        this.metrics?.updateClientTotalSrc.inc(1)
+      }
+      if (sender == 'B') {
+        this.metrics?.updateClientTotalDest.inc(1)
+      }
+    }
     return height;
   }
 
@@ -716,7 +724,6 @@ export class Link {
       headerHeight
     );
 
-    
     const acks = parseAcksFromLogs(logs);
     return acks.map((ack) => ({ height, ...ack }));
   }

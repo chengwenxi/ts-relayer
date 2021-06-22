@@ -190,13 +190,15 @@ The `GET /metrics` endpoint will be exposed by default on port `8080`, which you
    > **NOTE:** Ensure that `the --config.file=<path>` flag points at the existing configuration file. If you wish to use [the example config](demo/prometheus.yaml), just run the command above in the root of this repository. Otherwise, you must adjust the volume (`-v`) and config file path to your setup.
 3. Open the Prometheus dashboard in a browser at [http://localhost:9090](http://localhost:9090)
 4. Metrics
-   | metric                       | type    | description                                 |
-   | ---------------------------- | ------- | ------------------------------------------- |
-   | relayer_pending_packets_src  | Gauge   | Total pending packages on source chain      |
-   | relayer_pending_packets_dest | Gauge   | Total pending packages on destination chain |
-   | relayer_err_txs_total        | Counter | Total error on sending transaction          |
-   | relayer_balances_src         | Gauge   | Balances on source chain                    |
-   | relayer_balances_dest        | Gauge   | Balances on destination chain               |
+   | metric                           | type    | description                                          |
+   | -------------------------------- | ------- | ---------------------------------------------------- |
+   | relayer_pending_packets_src      | Gauge   | Total pending packages on source chain               |
+   | relayer_pending_packets_dest     | Gauge   | Total pending packages on destination chain          |
+   | relayer_err_txs_total            | Counter | Total error on sending transaction                   |
+   | relayer_balances_src             | Gauge   | Balances on source chain                             |
+   | relayer_balances_dest            | Gauge   | Balances on destination chain                        |
+   | relayer_update_client_total_src  | Gauge   | Total successful client updates on source chain      |
+   | relayer_update_client_total_dest | Gauge   | Total successful client updates on destination chain |
 
 #### Grafana
 
