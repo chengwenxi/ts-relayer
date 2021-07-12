@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.2.0
+
+### Minor Changes
+
+- b124983: Added the handling of begin and end block events
+
+### Patch Changes
+
+- 8589c03: Added the ability to specify custom gas limits for each chain
+
+## 0.1.6
+
+### Patch Changes
+
+- a4c9a31: Update relayer demo to use oysternet and nyancat
+- 2a955ea: Add home option to ics20 command
+- 9e4a5c3: Update deps, faster polling for tests
+
 ## 0.1.5
 
 ### Patch Changes

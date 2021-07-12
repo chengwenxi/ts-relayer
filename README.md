@@ -18,6 +18,16 @@ You can see an example of embedding the relayer in a [webapp below](#Web-App).
 - RPC addresses of 2 full nodes on compatible, IBC-enabled chains
 - See [Chain Requirements below](#Chain-Requirements) for details of what chains are supported
 
+## Important Note
+
+Versions until `v0.1.6` support Cosmos SDK `v0.41.1+`.
+From `v0.2.0` on we require Tendermint `v0.34.9+` (which is used in SDK `v0.42.4+`).
+If you are connecting to a v0.41 chain, please use the `v0.1.x` relayer.
+
+With `v0.2.0` we add support for relaying packets in BeginBlock and EndBlock. However, this requires
+an extra rpc endpoint in Tendermint that is not available in `v0.41.1`. We therefore increase the
+minimum compatible version of the SDK.
+
 ## Installation
 
 ### NPM
@@ -71,31 +81,41 @@ Reads the configuration and starts relaying packets.
 1. Init the configuration
 
    ```sh
-   ibc-setup init --src relayer_test_1 --dest relayer_test_2
+   ibc-setup init --src oysternet --dest nyancat
    ```
 
    - creates relayer's home directory at `~/.ibc-setup`
    - creates `app.yaml` inside relayer's home with `src`, `dest` and newly generated `mnemonic`
    - pulls default `registry.yaml` to relayer's home
-   - funds addresses on both sides so relayer can pay the fee while relaying packets
+   - funds addresses on `oysternet` so relayer can pay the fee while relaying packets
 
-   > **NOTE:** Test blockchains `relayer_test_1` and `relayer_test_2` are running in the public. You do not need to start any blockchain locally to complete the quick start guide.
+   > **NOTE:** Both testnets are running in the public. You do not need to start any blockchain locally to complete the quick start guide.
 
    > **NOTE:** Run `ibc-setup balances` to see the amount of tokens on each address.
 
-2. Create `ics20` channel
+2. Get testnet tokens for `nyancat`
+
+   - Find your relayer address on nyancat via: `ibc-setup keys list | grep nyancat`
+   - Join IRISnet discord with [this invite link](https://discord.gg/X6dZZxs3#nyncat-faucet)
+   - Go to the `nyancat-faucet` channel
+   - Request tokens at this address in the above channel: `$faucet iaa1fxmqew9dgg44jdf3l34zwa8rx7tcf42wz8ehjk`
+   - Check you have tokens on oysternet and nyancat via `ibc-setup balances`
+
+   [Original Instructions from IRISnet](https://github.com/irisnet/testnets/tree/master/nyancat#faucet)
+
+3. Create `ics20` channel
 
    ```sh
-   ibc-setup ics20
+   ibc-setup ics20 -v
    ```
 
    - creates a new connection on source and desination chains
    - saves connection ids to `app.yaml` file
    - creates a new channel
 
-3. Start the relayer in the verbose mode and 10s frequency polling
+4. Start the relayer in the verbose mode and 10s frequency polling
    ```sh
-   ibc-relayer start -v --poll 10
+   ibc-relayer start -v --poll 15
    ```
 
 ### Send tokens between chains
@@ -112,29 +132,44 @@ Reads the configuration and starts relaying packets.
      make install
      ```
 
-2. Create a new account and fund it
+2. Make sure `iris` binary is installed on your system
+
+   - you must be running Linux or OSX on amd64
+   - [install Go 1.15+](https://golang.org/doc/install) and ensure that `$PATH` includes Go binaries (you may need to restart your terminal session)
+   - clone and install `iris`:
+     ```sh
+     git clone https://github.com/irisnet/irishub
+     cd irishub
+     git checkout v1.1.1
+     make install
+     ```
+
+3. Create a new account and fund it
 
    ```sh
    wasmd keys add sender
-   JSON=$(jq -n --arg addr $(wasmd keys show -a sender) '{"denom":"umuon","address":$addr}')
-   curl -X POST --header "Content-Type: application/json" --data "$JSON" http://49.12.73.189:8001/credit
+   JSON=$(jq -n --arg addr $(wasmd keys show -a sender) '{"denom":"usponge","address":$addr}')
+   curl -X POST --header "Content-Type: application/json" --data "$JSON" https://faucet.oysternet.cosmwasm.com/credit
    ```
 
-3. Create another account to send tokens to
+4. Create a valid IRISnet address to send tokens to
+
    ```sh
-   wasmd keys add receiver
+   iris keys add receiver
    ```
-4. Send tokens
+
+   [Get testnet tokens](https://github.com/irisnet/testnets/tree/master/nyancat#faucet) if you want to send tokens to `oysternet`.
+
+5. Send tokens
    ```sh
-   wasmd tx ibc-transfer transfer transfer <channel-id> $(wasmd keys show -a receiver) 200umuon --from $(wasmd keys show -a sender) --node http://168.119.254.205:26657 --chain-id network-1 --fees 2000umuon
+   wasmd tx ibc-transfer transfer transfer <channel-id> $(iris keys show -a receiver) 200usponge --from $(wasmd keys show -a sender) --node http://rpc.oysternet.cosmwasm.com:80 --chain-id oysternet-1 --fees 2000usponge --packet-timeout-height 0-0
    ```
    - replace `<channel-id>` with the channel id obtained while configuring the relayer (2nd point)
    - if you cleared out the terminal, query the channel
      ```sh
-     # replace `connection-id` with value of `srcConnection` property from `~/.ibc-setup/app.yaml` file
-     ibc-setup channels --chain relayer_test_1 --connection <connection-id>
+     ibc-setup channels --chain oysternet
      ```
-5. Observe the relayer output
+6. Observe the relayer output
 
 ## Configuration overview
 
@@ -220,9 +255,9 @@ The `GET /metrics` endpoint will be exposed by default on port `8080`, which you
 
 ## Chain Requirements
 
-The blockchain must be based on Cosmos SDK `v0.41.1+`. In particular it must have
-[PR 8458](https://github.com/cosmos/cosmos-sdk/pull/8458) merged (if you are using a fork)
-in order for the relayer to work properly. `ibc-setup` should work on `v0.40.0+`
+The blockchain must be based on Cosmos SDK `v0.42.4+`. In particular it must have
+[PR 8458](https://github.com/cosmos/cosmos-sdk/pull/8458) and [PR 9081](https://github.com/cosmos/cosmos-sdk/pull/9081)
+merged (if you are using a fork) in order for the relayer to work properly. `ibc-setup` should work on `v0.40.0+`
 
 The chain must have a large value for `staking.params.historical_entries` (often set in genesis).
 The default is "10000" and this should work with "1000", but no relayer will work if it is set to 0.
